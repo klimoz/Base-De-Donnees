@@ -1,0 +1,172 @@
+Requêtes à fournir 
+
+KARIM TACHRIFT
+
+1- Billet avec toutes les infos
+ 
+SELECT 
+    mode_de_paiement_.MoDePaiment,
+    Billet_de_réservation.Numéro_de_réservation, 
+    Compagnier_a.nom AS Nom_de_la_Compagnie_Aérienne, 
+    Passagers.Nom AS Nom_du_passager, 
+    Passagers.Prénom AS Prénom_du_passager, 
+    Passagers.Numéro_de_téléphone AS Numéro_de_téléphone_du_passager, 
+    Passagers.Adresse AS Adresse_du_passager, 
+    Billet_de_réservation.Siége AS Siège_du_passager,
+    Billet_de_réservation.Porte AS Porte_d_embarquement,
+    Vols.Numéro_de_vol AS Numéro_de_vol, 
+    VilleDépart.Nom_de_la_ville AS Ville_de_départ,
+    VilleArrive.Nom_de_la_ville AS Ville_d_arrivée,
+    AeroportDépart.Nom_de_l_aéroport AS Aéroport_de_départ,
+    AeroportArrive.Nom_de_l_aéroport AS Aéroport_d_arrivée,
+    Vols.Heure_de_départ AS Heure_de_départ,
+    Vols.Heure_d_arrivée AS Heure_de_d_arrivée,
+    Vols.Tarif AS Tarif_du_vol,
+    Bagages.Numero_de_bagage AS Numero_de_bagage
+FROM Billet_de_réservation
+INNER JOIN Passagers ON Billet_de_réservation.Id_Passagers = Passagers.Id_Passagers
+INNER JOIN Vols ON Billet_de_réservation.Id_Vols = Vols.Id_Vols
+INNER JOIN Classes ON Billet_de_réservation.Id_Classes1 = Classes.Id_Classes1
+INNER JOIN Avion ON Vols.Id_Avion = Avion.Id_Avion
+INNER JOIN aeroport AS AeroportArrive ON Vols.Id_aeroport_Arrive = AeroportArrive.Id_aeroport
+INNER JOIN Villes AS VilleArrive ON AeroportArrive.Id_Villes = VilleArrive.Id_Villes
+INNER JOIN aeroport AS AeroportDépart ON Vols.Id_aeroport_départ = AeroportDépart.Id_aeroport
+INNER JOIN Villes AS VilleDépart ON AeroportDépart.Id_Villes = VilleDépart.Id_Villes
+INNER JOIN Compagnier_a ON Avion.Id_Compagnier_a = Compagnier_a.Id_Compagnier_a
+INNER JOIN mode_de_paiement_ ON mode_de_paiement_.Id_Mode_de_paiement_ = Billet_de_réservation.Id_Mode_de_paiement_
+INNER JOIN Bagages ON Bagages.Id_Passagers = Passagers.Id_Passagers;
+
+
+2- Liste de voyageurs pour un vol classés par classe et par siège
+
+SELECT 
+    Vols.Numéro_de_vol, 
+    Billet_de_réservation.Siége, 
+    Classes.Id_Classes1,  
+    Passagers.Nom, 
+    Passagers.Prénom
+FROM Vols
+INNER JOIN Billet_de_réservation ON Vols.Id_Vols = Billet_de_réservation.Id_Vols
+INNER JOIN Classes ON Billet_de_réservation.Id_Classes1 = Classes.Id_Classes1
+INNER JOIN Passagers ON Billet_de_réservation.Id_Passagers = Passagers.Id_Passagers
+WHERE Vols.Numéro_de_vol = 'UA8264'
+ORDER BY Classes.Id_Classes1, Billet_de_réservation.Siége;
+
+3- Tableau d'affichage des vols prévus au départ et à l'arrivée pour un aéroport
+
+SELECT 
+    Vols.Numéro_de_vol AS Numéro_de_vol,
+    Compagnie.Nom AS Nom_de_la_compagnie,
+    VilleDépart.Nom_de_la_ville AS Ville_Départ,
+    AeroportDépart.Nom_de_l_aéroport AS Aéroport_Départ,
+    Vols.Heure_de_départ AS Date_prévue_au_départ,
+    AvionDépart.Modèle_de_l_avion AS Modèle_de_l_avion,
+    VilleArrivee.Nom_de_la_ville AS Ville_Arrivée,
+    Vols.Heure_d_arrivée AS Date_prévue_à_l_arrivée  
+FROM Vols
+INNER JOIN Avion AS AvionDépart ON Vols.Id_Avion = AvionDépart.Id_Avion
+INNER JOIN Compagnier_a AS Compagnie ON AvionDépart.Id_Compagnier_a = Compagnie.Id_Compagnier_a
+INNER JOIN Aeroport AS AeroportDépart ON Vols.Id_aeroport_départ = AeroportDépart.Id_aeroport
+INNER JOIN Villes AS VilleDépart ON AeroportDépart.Id_Villes = VilleDépart.Id_Villes
+
+INNER JOIN Aeroport AS AeroportArrivee ON Vols.Id_aeroport_Arrive = AeroportArrivee.Id_aeroport
+INNER JOIN Villes AS VilleArrivee ON AeroportArrivee.Id_Villes = VilleArrivee.Id_Villes
+
+WHERE AeroportDépart.Id_aeroport = 7 OR AeroportArrivee.Id_aeroport = 7; -- ici je precise avec WHERE pour le ID de l'aéroport.
+
+4- Nombre de vols réalisés par chaque compagnie
+
+SELECT
+    Compagnier_a.nom AS Nom_de_la_Compagnie_Aérienne,
+    COUNT(*) AS Nombre_de_vols_réalisés
+FROM Vols
+INNER JOIN Avion ON Vols.Id_Avion = Avion.Id_Avion
+INNER JOIN Compagnier_a ON Avion.Id_Compagnier_a = Compagnier_a.Id_Compagnier_a
+GROUP BY Compagnier_a.nom;
+
+5- Nombre de passagers transportés par chaque pilote
+
+SELECT 
+    Personnel.Nom AS Nom_du_pilote,
+    Personnel.Prénom AS Prénom_du_pilote,
+    COUNT(DISTINCT Passagers.Id_Passagers) AS Nombre_de_passagers_transportés
+
+FROM Personnel
+INNER JOIN Vols ON Personnel.Id_Personnel = Vols.Id_Personnel
+INNER JOIN billet_de_réservation ON Vols.Id_Vols = billet_de_réservation.Id_Vols
+INNER JOIN Passagers ON billet_de_réservation.Id_Passagers = Passagers.Id_Passagers
+
+GROUP BY Personnel.Id_Personnel;
+
+6- Aéroports les plus fréquentés
+
+SELECT 
+    Aeroport.Nom_de_l_aéroport,
+    COUNT(DISTINCT VolsDepart.Id_Vols) + COUNT(DISTINCT VolsArrive.Id_Vols) AS Nombre_de_vols_total
+
+FROM Aeroport
+
+LEFT JOIN Vols AS VolsDepart ON Aeroport.Id_aeroport = VolsDepart.Id_aeroport_départ
+LEFT JOIN Vols AS VolsArrive ON Aeroport.Id_aeroport = VolsArrive.Id_aeroport_Arrive
+
+GROUP BY Aeroport.Id_aeroport
+ORDER BY Nombre_de_vols_total DESC;
+
+7- CA par agence
+
+SELECT 
+    Agences.Nom_de_l_agence,
+    SUM(Facture.Montant_total) AS Chiffre_d_affaires_total
+
+FROM Gère
+
+LEFT JOIN Facture ON Gère.Id_Facture = Facture.Id_Facture
+LEFT JOIN Agences ON Gère.Id_Agences = Agences.Id_Agences
+
+GROUP BY Agences.Id_Agences
+ORDER BY Chiffre_d_affaires_total DESC;
+
+8- Nombre de billets de chaque classe émis par chaque compagnie aérienne
+
+SELECT
+    Compagnier_a.Nom AS Compagnie_Aérienne,
+    Classes.Tarif AS Classe,
+    COUNT(*) AS Nombre_de_Billets
+
+FROM Billet_de_réservation
+INNER JOIN Vols ON Billet_de_réservation.Id_Vols = Vols.Id_Vols
+INNER JOIN Avion ON Vols.Id_Avion = Avion.Id_Avion
+INNER JOIN Compagnier_a ON Avion.Id_Compagnier_a = Compagnier_a.Id_Compagnier_a
+INNER JOIN Classes ON Billet_de_réservation.Id_Classes1 = Classes.Id_Classes1
+
+GROUP BY Compagnier_a.Id_Compagnier_a, Classes.Id_Classes1;
+
+9- Liste des villes fréquentées par chaque avion
+
+SELECT
+    Avion.Numéro_d_identification AS Numéro_d_identification_Avion,
+    Avion.Modèle_de_l_avion,
+    Ville.Nom_de_la_ville AS Ville_Fréquentée
+
+FROM Vols
+INNER JOIN Avion ON Vols.Id_Avion = Avion.Id_Avion
+INNER JOIN Aeroport ON Vols.Id_aeroport_départ = Aeroport.Id_aeroport OR Vols.Id_aeroport_Arrive = Aeroport.Id_aeroport
+INNER JOIN Villes AS Ville ON Aeroport.Id_Villes = Ville.Id_Villes
+
+GROUP BY Avion.Id_Avion, Ville.Id_Villes;
+
+10- Liste des villes de destination réservées pour chaque client
+
+SELECT 
+    Clients.Nom_de_la_société AS Nom_client,
+    Passagers.Nom AS Nom_passager,
+    Passagers.Prénom AS Prénom_passager,
+    Villes.Nom_de_la_ville AS Ville_de_destination
+
+FROM billet_de_réservation
+INNER JOIN Passagers ON billet_de_réservation.Id_Passagers = Passagers.Id_Passagers
+INNER JOIN Gère ON billet_de_réservation.Id_Facture = Gère.Id_Facture
+INNER JOIN Clients ON Gère.Id_Clients = Clients.Id_Clients
+INNER JOIN Vols ON billet_de_réservation.Id_Vols = Vols.Id_Vols
+INNER JOIN Aeroport ON Vols.Id_aeroport_Arrive = Aeroport.Id_aeroport
+INNER JOIN Villes ON Aeroport.Id_Villes = Villes.Id_Villes;
